@@ -4,10 +4,6 @@ import streamlit as st
 from PyNite import FEModel3D
 import pandas as pd
 import numpy as np
-import scipy
-#from PyNite import Visualization
-print (scipy.__version__)
-
 
 #Analysis function
 
