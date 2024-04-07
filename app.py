@@ -133,7 +133,7 @@ with st.sidebar:
     st.subheader('Notation')
     st.write('When adding element to tables ensure the index values are correct and run from 0.')
     st.subheader('Sign convention')
-    st.image('sign_convention.png')
+    st.image('images/sign_convention.png')
     st.subheader('Next Steps')
     st.write("Improve plots to show nodes/supports.")
     st.write("Add deflection plots.")
