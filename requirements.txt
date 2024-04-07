@@ -1,5 +1,4 @@
 numpy==1.24.3
-numpy==1.25.0
 pandas==1.5.3
 PyNite==1.4.2
 PyNiteFEA==0.0.78
