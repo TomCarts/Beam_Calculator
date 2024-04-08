@@ -137,9 +137,10 @@ with st.sidebar:
     st.subheader('Notes')
     st.write('When adding element to tables ensure the index values are correct and run from 0.')
     st.subheader('Loads')
-    st.write('Fy = Vertical Point Loads, Mz = Moment about z-axis'
-             'UDL Loads: w1 & w2 = udl magnitude at LHS & RHS respectivly'
-             'UDL Loads: x1 & x2 = udl start and finish point on respective members')
+    st.write('Fy = Vertical Point Loads')
+    st.write('Mz = Moment about z-axis')
+    st.write('w1 & w2 = udl magnitude at LHS & RHS respectivly')
+    st.write('UDL Loads: x1 & x2 = udl start and finish point on respective members')
     st.subheader('Sign convention')
     st.image(image)
     st.subheader('Next Steps')
