@@ -4,3 +4,4 @@ PyNite==1.4.2
 PyNiteFEA==0.0.78
 streamlit==1.31.1
 scipy==1.11.3
+PIL==10.2.0

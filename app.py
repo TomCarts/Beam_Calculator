@@ -4,6 +4,7 @@ import streamlit as st
 from PyNite import FEModel3D
 import pandas as pd
 import numpy as np
+from PIL import Image
 
 #Analysis function
 
@@ -122,7 +123,10 @@ udl_loads_df.loc[len(udl_loads_df)] = load_2
 udl_loads_df.loc[len(udl_loads_df)] = load_3
 
 
+
 #Page config
+#image
+image=Image.open('images/sign_convention.png')
 
 st.set_page_config(page_title="Civils Optimisation",page_icon=":computer",layout="wide")
 with st.sidebar:
@@ -132,8 +136,8 @@ with st.sidebar:
     st.write('This calculator is run on Pynite FE3Dmodel(). Ensure Nodes match members before calculating results.')
     st.subheader('Notation')
     st.write('When adding element to tables ensure the index values are correct and run from 0.')
-    #st.subheader('Sign convention')
-    #st.image('images/sign_convention.png')
+    st.subheader('Sign convention')
+    st.image(image)
     st.subheader('Next Steps')
     st.write("Improve plots to show nodes/supports.")
     st.write("Add deflection plots.")
