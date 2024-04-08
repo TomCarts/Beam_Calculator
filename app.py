@@ -126,7 +126,7 @@ udl_loads_df.loc[len(udl_loads_df)] = load_3
 
 #Page config
 #image
-image=Image.open('images/sign_convention.png')
+image=Image.open('images/sign_convention.PNG')
 
 st.set_page_config(page_title="Civils Optimisation",page_icon=":computer",layout="wide")
 with st.sidebar:
@@ -183,3 +183,6 @@ if st.button("Calculate"):
         st.line_chart(df, x='y', y=['beam','Fy'])
     st.subheader('Deflection Plot')
     st.line_chart(df, x='y', y=['beam','dy'])
+    
+import os
+print(os.path.exists('images/sign_convention.png'))
