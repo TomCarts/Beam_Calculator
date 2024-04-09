@@ -5,6 +5,7 @@ from PyNite import FEModel3D
 import pandas as pd
 import numpy as np
 from PIL import Image
+import matplotlib.pyplot as plt
 
 #Analysis function
 
@@ -174,12 +175,89 @@ with col2:
     st.write('w1 & w2 - udl magnitude at LHS & RHS respectivly')
     st.write('x1 & x2 - udl start and finish point respective to start of member i.e. from left hand node')
 
+if st.button("Visualise"):
+    #Get results
+    beam = beam_analysis(nodes_df, members_df, point_loads_df)
+
+    df=results_table(beam,members_df,nodes_df)
+
+    #Graph Total BMD
+    fig = plt.figure(figsize=(8, 4))
+    ax1 = plt.subplot(211)
+    #Plot Beam
+    df.plot(x='y', y='beam', ax=ax1, label='FBD', linewidth=2, color='deeppink', linestyle='-')
+    #Plot Nodes
+    for i in range(len(nodes_df)):
+        ax1.plot(nodes_df.iloc[i,1],[0], linewidth=2, color='dimgrey', marker=6, markersize=16)
+    ax1.plot([0],[0], linewidth=2, color='dimgrey', marker=6, markersize=16,label='Nodes')
+    
+    #Plot point loads
+    for i in range(len(point_loads_df)):
+        for j in range(len(members_df)):
+            if point_loads_df.iloc[i,0] == members_df.iloc[j,0]:
+                    ax1.plot((point_loads_df.iloc[i,3]+nodes_df.iloc[j,1]),[0.1], linewidth=2, color='red', marker=7, markersize=16)
+    
+    #ax1.plot((point_loads_df.iloc[0,3]+nodes_df.iloc[0,1]),[0], linewidth=2, color='red', marker=7, markersize=16,label='Point Loads')
+    
+    #Plot UDL loads
+    for i in range(len(udl_loads_df)):
+        for j in range(len(members_df)):
+            if udl_loads_df.iloc[i,0] == members_df.iloc[j,0]:
+                    ax1.plot([(udl_loads_df.iloc[i,4]+nodes_df.iloc[j,1]),(udl_loads_df.iloc[i,5]+nodes_df.iloc[j,1])],[0.1,0.1], linewidth=2, color='green', marker=2, markersize=16)
+               
+    #add legend
+    ax1.legend('')
+    plt.ylim(-0.25,1)
+
+    ax1.set_xlabel('Span (m)') #Column 4 title
+    plt.grid()
+    plt.title('Free Body Diagram') #Column 4 title
+
+    plt.tight_layout()
+    st.pyplot(fig)
+
 if st.button("Calculate"):
     # Perform beam analysis
     beam = beam_analysis(nodes_df, members_df, point_loads_df)
-    # Display results
+    # Display FBD
     #display_plots(beam,members_df)
     df=results_table(beam,members_df,nodes_df)
+    #Graph Total BMD
+    fig = plt.figure(figsize=(8, 4))
+    ax1 = plt.subplot(211)
+    #Plot Beam
+    df.plot(x='y', y='beam', ax=ax1, label='FBD', linewidth=2, color='deeppink', linestyle='-')
+    #Plot Nodes
+    for i in range(len(nodes_df)):
+        ax1.plot(nodes_df.iloc[i,1],[0], linewidth=2, color='dimgrey', marker=6, markersize=16)
+    ax1.plot([0],[0], linewidth=2, color='dimgrey', marker=6, markersize=16,label='Nodes')
+    
+    #Plot point loads
+    for i in range(len(point_loads_df)):
+        for j in range(len(members_df)):
+            if point_loads_df.iloc[i,0] == members_df.iloc[j,0]:
+                    ax1.plot((point_loads_df.iloc[i,3]+nodes_df.iloc[j,1]),[0.1], linewidth=2, color='red', marker=7, markersize=16)
+    
+    #ax1.plot((point_loads_df.iloc[0,3]+nodes_df.iloc[0,1]),[0], linewidth=2, color='red', marker=7, markersize=16,label='Point Loads')
+    
+    #Plot UDL loads
+    for i in range(len(udl_loads_df)):
+        for j in range(len(members_df)):
+            if udl_loads_df.iloc[i,0] == members_df.iloc[j,0]:
+                    ax1.plot([(udl_loads_df.iloc[i,4]+nodes_df.iloc[j,1]),(udl_loads_df.iloc[i,5]+nodes_df.iloc[j,1])],[0.1,0.1], linewidth=2, color='green', marker=2, markersize=16)
+               
+    #add legend
+    ax1.legend('')
+    plt.ylim(-0.25,0.5)
+
+    ax1.set_xlabel('Span (m)') #Column 4 title
+    plt.grid()
+    plt.title('Free Body Diagram') #Column 4 title
+
+    plt.tight_layout()
+    st.pyplot(fig)
+    
+    #Display results
     st.header('Results')
     col1, col2, col3 = st.columns([1,2,2])
     with col1:
@@ -193,4 +271,5 @@ if st.button("Calculate"):
         st.line_chart(df, x='y', y=['beam','Fy'])
     st.subheader('Deflection Plot')
     st.line_chart(df, x='y', y=['beam','dy'])
+    
 
