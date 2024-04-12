@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 
 #Analysis function
 
@@ -72,7 +73,85 @@ def results_table(beam,members_df,nodes_df):
     results_df['beam']=0  
 
     return results_df
-    
+
+# Free Body Diagram Visualization
+def plot_free_body_diagram(nodes_df, members_df, point_loads_df, udl_loads_df):
+    fig = go.Figure()
+
+    # Draw beams
+    for index, row in members_df.iterrows():
+        node_lhs = nodes_df[nodes_df['name'] == row['Node_LHS']]
+        node_rhs = nodes_df[nodes_df['name'] == row['Node_RHS']]
+        fig.add_trace(go.Scatter(x=[node_lhs['x'].values[0], node_rhs['x'].values[0]],
+                                 y=[0, 0],
+                                 mode='lines',
+                                 line=dict(width=5),
+                                 name=row['Name']))
+
+    # Draw supports
+    for index, row in nodes_df.iterrows():
+        support_label = ''
+        if row['R_Fx']:
+            support_label += 'Fx, '
+        if row['R_Fy']:
+            support_label += 'Fy, '
+        if row['R_Fz']:
+            support_label += 'Fz, '
+        if row['R_Mx']:
+            support_label += 'Mx, '
+        if row['R_My']:
+            support_label += 'My, '
+        if row['R_Mz']:
+            support_label += 'Mz, '
+
+        if support_label:
+            fig.add_annotation(x=row['x'], y=-0.1, text=support_label[:-2], showarrow=False)
+
+    # Draw point loads as arrows
+    for index, load in point_loads_df.iterrows():
+        member = load['Member']
+        member_data = members_df[members_df['Name'] == member]
+        load_x = load['x1'] + nodes_df[nodes_df['name'] == member_data['Node_LHS'].values[0]]['x'].values[0]
+        load_value = load['Value']
+
+        fig.add_annotation(x=load_x, y=0, text=f"{load_value} kN",
+                           showarrow=True,
+                           arrowhead=2,
+                           arrowsize=1,
+                           arrowwidth=2,
+                           arrowcolor="blue",
+                           ax=0,
+                           ay=-30)
+
+    # Draw UDLs as single thick line with label
+    for index, load in udl_loads_df.iterrows():
+        member = load['Member']
+        member_data = members_df[members_df['Name'] == member]
+        load_x1 = load['x1'] + nodes_df[nodes_df['name'] == member_data['Node_LHS'].values[0]]['x'].values[0]
+        load_x2 = load['x2'] + nodes_df[nodes_df['name'] == member_data['Node_LHS'].values[0]]['x'].values[0]
+        load_value = load['w1']  # Assuming w1 represents the value of UDL
+        udl_center = (load_x1 + load_x2) / 2
+        
+        fig.add_shape(type="line",
+                      x0=load_x1,
+                      y0=0.3,  # Adjust the height of the UDL line above the beam as needed
+                      x1=load_x2,
+                      y1=0.3,  # Adjust the height of the UDL line above the beam as needed
+                      line=dict(color="green", width=5),
+                      name=f"UDL ({load_value} kN/m)",
+                      opacity=0.5)
+        fig.add_annotation(x=udl_center, y=0.5, text=f"{load_value} kN/m", showarrow=False)
+        
+    fig.update_layout(title="Free Body Diagram",
+                      width=1500,
+                      xaxis_title="X",
+                      yaxis_title="Y",
+                      showlegend=True,
+                      yaxis=dict(range=[-1, 1]))  # Adjust the range as needed
+
+    st.plotly_chart(fig)
+  
+
 #Input Data on start up
 
 #Table Data for nodes
@@ -175,88 +254,19 @@ with col2:
     st.write('w1 & w2 - udl magnitude at LHS & RHS respectivly')
     st.write('x1 & x2 - udl start and finish point respective to start of member i.e. from left hand node')
 
-if st.button("Visualise"):
+if st.button("Visualise"):# Call the function to plot the free body diagram
+    #display fbd
+    plot_free_body_diagram(nodes_df, members_df, point_loads_df, udl_loads_df)
+
+if st.button("Calculate"):
+    #display fbd
+    plot_free_body_diagram(nodes_df, members_df, point_loads_df, udl_loads_df)
+    
     #Get results
     beam = beam_analysis(nodes_df, members_df, point_loads_df)
 
     df=results_table(beam,members_df,nodes_df)
-
-    #Graph Total BMD
-    fig = plt.figure(figsize=(8, 4))
-    ax1 = plt.subplot(211)
-    #Plot Beam
-    df.plot(x='y', y='beam', ax=ax1, label='FBD', linewidth=2, color='deeppink', linestyle='-')
-    #Plot Nodes
-    for i in range(len(nodes_df)):
-        ax1.plot(nodes_df.iloc[i,1],[0], linewidth=2, color='dimgrey', marker=6, markersize=16)
-    ax1.plot([0],[0], linewidth=2, color='dimgrey', marker=6, markersize=16,label='Nodes')
-    
-    #Plot point loads
-    for i in range(len(point_loads_df)):
-        for j in range(len(members_df)):
-            if point_loads_df.iloc[i,0] == members_df.iloc[j,0]:
-                    ax1.plot((point_loads_df.iloc[i,3]+nodes_df.iloc[j,1]),[0.1], linewidth=2, color='red', marker=7, markersize=16)
-    
-    #ax1.plot((point_loads_df.iloc[0,3]+nodes_df.iloc[0,1]),[0], linewidth=2, color='red', marker=7, markersize=16,label='Point Loads')
-    
-    #Plot UDL loads
-    for i in range(len(udl_loads_df)):
-        for j in range(len(members_df)):
-            if udl_loads_df.iloc[i,0] == members_df.iloc[j,0]:
-                    ax1.plot([(udl_loads_df.iloc[i,4]+nodes_df.iloc[j,1]),(udl_loads_df.iloc[i,5]+nodes_df.iloc[j,1])],[0.1,0.1], linewidth=2, color='green', marker=2, markersize=16)
-               
-    #add legend
-    ax1.legend('')
-    plt.ylim(-0.25,1)
-
-    ax1.set_xlabel('Span (m)') #Column 4 title
-    plt.grid()
-    plt.title('Free Body Diagram') #Column 4 title
-
-    plt.tight_layout()
-    st.pyplot(fig)
-
-if st.button("Calculate"):
-    # Perform beam analysis
-    beam = beam_analysis(nodes_df, members_df, point_loads_df)
-    # Display FBD
-    #display_plots(beam,members_df)
-    df=results_table(beam,members_df,nodes_df)
-    #Graph Total BMD
-    fig = plt.figure(figsize=(8, 4))
-    ax1 = plt.subplot(211)
-    #Plot Beam
-    df.plot(x='y', y='beam', ax=ax1, label='FBD', linewidth=2, color='deeppink', linestyle='-')
-    #Plot Nodes
-    for i in range(len(nodes_df)):
-        ax1.plot(nodes_df.iloc[i,1],[0], linewidth=2, color='dimgrey', marker=6, markersize=16)
-    ax1.plot([0],[0], linewidth=2, color='dimgrey', marker=6, markersize=16,label='Nodes')
-    
-    #Plot point loads
-    for i in range(len(point_loads_df)):
-        for j in range(len(members_df)):
-            if point_loads_df.iloc[i,0] == members_df.iloc[j,0]:
-                    ax1.plot((point_loads_df.iloc[i,3]+nodes_df.iloc[j,1]),[0.1], linewidth=2, color='red', marker=7, markersize=16)
-    
-    #ax1.plot((point_loads_df.iloc[0,3]+nodes_df.iloc[0,1]),[0], linewidth=2, color='red', marker=7, markersize=16,label='Point Loads')
-    
-    #Plot UDL loads
-    for i in range(len(udl_loads_df)):
-        for j in range(len(members_df)):
-            if udl_loads_df.iloc[i,0] == members_df.iloc[j,0]:
-                    ax1.plot([(udl_loads_df.iloc[i,4]+nodes_df.iloc[j,1]),(udl_loads_df.iloc[i,5]+nodes_df.iloc[j,1])],[0.1,0.1], linewidth=2, color='green', marker=2, markersize=16)
-               
-    #add legend
-    ax1.legend('')
-    plt.ylim(-0.25,0.5)
-
-    ax1.set_xlabel('Span (m)') #Column 4 title
-    plt.grid()
-    plt.title('Free Body Diagram') #Column 4 title
-
-    plt.tight_layout()
-    st.pyplot(fig)
-    
+  
     #Display results
     st.header('Results')
     col1, col2, col3 = st.columns([1,2,2])
@@ -271,5 +281,6 @@ if st.button("Calculate"):
         st.line_chart(df, x='y', y=['beam','Fy'])
     st.subheader('Deflection Plot')
     st.line_chart(df, x='y', y=['beam','dy'])
+
     
 
