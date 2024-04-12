@@ -142,7 +142,7 @@ def plot_free_body_diagram(nodes_df, members_df, point_loads_df, udl_loads_df):
         fig.add_annotation(x=udl_center, y=0.5, text=f"{load_value} kN/m", showarrow=False)
         
     fig.update_layout(title="Free Body Diagram",
-                      width=1500,
+                      width=1000,
                       xaxis_title="X",
                       yaxis_title="Y",
                       showlegend=True,
