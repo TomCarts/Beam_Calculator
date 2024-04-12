@@ -5,8 +5,9 @@ from PyNite import FEModel3D
 import pandas as pd
 import numpy as np
 from PIL import Image
-import matplotlib.pyplot as plt
 import plotly.graph_objects as go
+import plotly
+plotly.__version__
 
 #Analysis function
 
