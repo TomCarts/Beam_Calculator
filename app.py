@@ -148,7 +148,7 @@ def plot_free_body_diagram(nodes_df, members_df, point_loads_df, udl_loads_df):
                       showlegend=True,
                       yaxis=dict(range=[-1, 1]))  # Adjust the range as needed
 
-    st.plotly_chart(fig)
+    st.plotly_chart(fig, use_container_width=True)
   
 
 #Input Data on start up
