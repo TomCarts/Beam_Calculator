@@ -164,15 +164,15 @@ def create_report(report_file):
 
     # Save Bending Moment Diagram
     doc.add_heading("Bending Moment Diagram", level=2)
-    doc.add_picture(moment_image_path, width=Inches(6), height=Inches(3)) 
+    doc.add_picture(moment_image_path, width=Inches(6), height=Inches(3.5)) 
   
     # Save Shear Force Diagram
     doc.add_heading("Shear Force Diagram", level=2)
-    doc.add_picture(shear_image_path, width=Inches(6), height=Inches(3))
+    doc.add_picture(shear_image_path, width=Inches(6), height=Inches(3.5))
    
     # Save Deflecton Diagram
     doc.add_heading("Deflection Diagram", level=2)
-    doc.add_picture(def_figure_path, width=Inches(6), height=Inches(3))
+    doc.add_picture(def_figure_path, width=Inches(6), height=Inches(3.5))
 
     # Save the report file
     doc.save(report_file)
