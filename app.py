@@ -6,6 +6,11 @@ import pandas as pd
 import numpy as np
 from PIL import Image
 import plotly.graph_objects as go
+from docx import Document
+import plotly.express as px
+import kaleido
+from docx.shared import Inches
+
 
 #Analysis function
 
@@ -149,7 +154,34 @@ def plot_free_body_diagram(nodes_df, members_df, point_loads_df, udl_loads_df):
                       yaxis=dict(range=[-1, 1]))  # Adjust the range as needed
 
     st.plotly_chart(fig, use_container_width=True)
+
+#Create Report Function
+
+def create_report(report_file):
+    doc = Document()
+
+    doc.add_heading("Bending Moment Diagram and Shear Force Diagram", level=1)
+
+    # Save Bending Moment Diagram
+    doc.add_heading("Bending Moment Diagram", level=2)
+    doc.add_picture(moment_image_path, width=Inches(6), height=Inches(3)) 
   
+    # Save Shear Force Diagram
+    doc.add_heading("Shear Force Diagram", level=2)
+    doc.add_picture(shear_image_path, width=Inches(6), height=Inches(3))
+   
+    # Save Deflecton Diagram
+    doc.add_heading("Deflection Diagram", level=2)
+    doc.add_picture(def_figure_path, width=Inches(6), height=Inches(3))
+
+    # Save the report file
+    doc.save(report_file)
+
+# Your code for creating the plots (ax1 and ax2)
+# Make sure you have the plots defined before calling save_diagrams_to_word_report
+
+# Save diagrams in a Word document report
+report_file = "report/Beam_Calculation_Report.docx"
 
 #Input Data on start up
 
@@ -215,7 +247,7 @@ with st.sidebar:
     st.write('When adding element to tables ensure the index added/updated. The index for each table should run from 0 andf increase sequentially i.e. 0,1,2')
     st.write('Units are defined by user i.e. outputs units are respective to inputs')
     st.subheader('Next Steps')
-    st.write("Improve plots to show nodes/supports.")
+    st.write("Add presets for 'Single Span or multispan")
     st.write("Add moving loads option.")
     st.write("Add option to print as report")
     st.subheader('Author')
@@ -274,12 +306,28 @@ if st.button("Calculate"):
         st.dataframe(df)
     with col2:
         st.subheader('Moment diagram')
-        st.line_chart(df, x='y', y=['beam','Mz'])
+        mom_fig = px.line(df, x='y', y=['beam','Mz'])
+        moment_image_path = "images/moment_figure.png"  # Define path to save the image
+        mom_fig.write_image(moment_image_path)
+        st.plotly_chart(mom_fig)
+        
     with col3:
         st.subheader('Shear Force Diagram')
-        st.line_chart(df, x='y', y=['beam','Fy'])
+        shear_fig = px.line(df, x='y', y=['beam','Fy'])
+        shear_image_path = "images/shear_figure.png"  # Define path to save the image
+        shear_fig.write_image(shear_image_path)
+        st.plotly_chart(shear_fig)
+
     st.subheader('Deflection Plot')
-    st.line_chart(df, x='y', y=['beam','dy'])
+    def_fig=px.line(df, x='y', y=['beam','dy'])
+    def_figure_path="images/deflection_figure.png"
+    def_fig.write_image(def_figure_path)
+    st.plotly_chart(def_fig)
+    create_report(report_file)
+    st.download_button(label="Download Report", data=open(report_file, "rb"), file_name="report.docx", mime="application/octet-stream")
+    #report_file = "report/Beam_Calculation_Report.docx"
+
+
 
     
 
