@@ -160,7 +160,7 @@ def plot_free_body_diagram(nodes_df, members_df, point_loads_df, udl_loads_df):
 def create_report(report_file):
     doc = Document()
 
-    doc.add_heading("Bending Moment Diagram and Shear Force Diagram", level=1)
+    doc.add_heading("Beam Calculator: Force and Deflection diagram report", level=1)
 
     # Save Bending Moment Diagram
     doc.add_heading("Bending Moment Diagram", level=2)
@@ -326,8 +326,3 @@ if st.button("Calculate"):
     create_report(report_file)
     st.download_button(label="Download Report", data=open(report_file, "rb"), file_name="report.docx", mime="application/octet-stream")
     #report_file = "report/Beam_Calculation_Report.docx"
-
-
-
-    
-
