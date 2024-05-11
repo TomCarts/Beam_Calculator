@@ -324,5 +324,4 @@ if st.button("Calculate"):
     def_fig.write_image(def_figure_path)
     st.plotly_chart(def_fig)
     create_report(report_file)
-    st.download_button(label="Download Report", data=open(report_file, "rb"), file_name="report.docx", mime="application/octet-stream")
-    #report_file = "report/Beam_Calculation_Report.docx"
+    st.download_button(label="Download Report", data=open(report_file, "rb"), file_name="Beam_Calculation_Report.docx", mime="application/octet-stream")
