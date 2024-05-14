@@ -11,7 +11,21 @@ import plotly.express as px
 import kaleido
 from docx.shared import Inches
 
+  
+# Initialize session state for the DataFrame and graphs if they don't already exist
+if 'dataframe' not in st.session_state:
+    # Create a sample DataFrame
+    df = pd.DataFrame()
+    st.session_state['dataframe'] = df
+else:
+    df = st.session_state['dataframe']
 
+if 'show_FBD' not in st.session_state:
+    st.session_state['show_FBD'] = False
+
+if 'show_results' not in st.session_state:
+    st.session_state['show_results'] = False
+  
 #Analysis function
 
 def beam_analysis(nodes_df,members_df,point_loads_df):
@@ -152,12 +166,12 @@ def plot_free_body_diagram(nodes_df, members_df, point_loads_df, udl_loads_df):
                       yaxis_title="Y",
                       showlegend=True,
                       yaxis=dict(range=[-1, 1]))  # Adjust the range as needed
-
     st.plotly_chart(fig, use_container_width=True)
 
 #Create Report Function
-
-def create_report(report_file):
+  
+# Function to create the Word document
+def create_report(report_file, moment_image_path, shear_image_path, def_figure_path):
     doc = Document()
 
     doc.add_heading("Beam Calculator: Force and Deflection diagram report", level=1)
@@ -284,44 +298,51 @@ with col2:
     st.write('Load Type: Fy - Vertical Point Loads, Mz - Moment about major axis')
     st.write('w1 & w2 - udl magnitude at LHS & RHS respectivly')
     st.write('x1 & x2 - udl start and finish point respective to start of member i.e. from left hand node')
-
-if st.button("Visualise"):# Call the function to plot the free body diagram
-    #display fbd
-    plot_free_body_diagram(nodes_df, members_df, point_loads_df, udl_loads_df)
-
-if st.button("Calculate"):
-    #display fbd
-    plot_free_body_diagram(nodes_df, members_df, point_loads_df, udl_loads_df)
     
-    #Get results
-    beam = beam_analysis(nodes_df, members_df, point_loads_df)
+# Button to generate the first graph
+if st.button("show_FBD"):
+    st.session_state['show_FBD'] = True
 
-    df=results_table(beam,members_df,nodes_df)
-  
-    #Display results
+# Button to generate the second graph
+if st.button("show_results"):
+    st.session_state['show_results'] = True
+
+if st.session_state['show_FBD']: # Call the function to plot the free body diagram
+    #display fbd
+    plot_free_body_diagram(nodes_df, members_df, point_loads_df, udl_loads_df)
+
+if st.session_state["show_results"]:
+    
+    # Perform calculations
+    beam = beam_analysis(nodes_df, members_df, point_loads_df)
+    results_df = results_table(beam, members_df, nodes_df)
+
+    # Display results
     st.header('Results')
-    col1, col2, col3 = st.columns([1,2,2])
+    col1, col2, col3 = st.columns([1, 2, 2])
     with col1:
         st.subheader('Table')
-        st.dataframe(df)
+        st.dataframe(results_df)
     with col2:
         st.subheader('Moment diagram')
-        mom_fig = px.line(df, x='y', y=['beam','Mz'])
+        mom_fig = px.line(results_df, x='y', y=['beam', 'Mz'])
         moment_image_path = "images/moment_figure.png"  # Define path to save the image
         mom_fig.write_image(moment_image_path)
         st.plotly_chart(mom_fig)
-        
     with col3:
         st.subheader('Shear Force Diagram')
-        shear_fig = px.line(df, x='y', y=['beam','Fy'])
+        shear_fig = px.line(results_df, x='y', y=['beam', 'Fy'])
         shear_image_path = "images/shear_figure.png"  # Define path to save the image
         shear_fig.write_image(shear_image_path)
         st.plotly_chart(shear_fig)
 
+    # Save deflection plot
     st.subheader('Deflection Plot')
-    def_fig=px.line(df, x='y', y=['beam','dy'])
-    def_figure_path="images/deflection_figure.png"
+    def_fig = px.line(results_df, x='y', y=['beam', 'dy'])
+    def_figure_path = "images/deflection_figure.png"
     def_fig.write_image(def_figure_path)
     st.plotly_chart(def_fig)
-    create_report(report_file)
+    
+    #Download Button
+    create_report(report_file,moment_image_path,shear_image_path,def_figure_path)
     st.download_button(label="Download Report", data=open(report_file, "rb"), file_name="Beam_Calculation_Report.docx", mime="application/octet-stream")
