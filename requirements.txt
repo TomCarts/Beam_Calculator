@@ -9,3 +9,5 @@ matplotlib==3.8.0
 plotly==5.18.0
 python-docx==0.8.11
 kaleido==0.2.1
+openpyxl==3.0.9
+
