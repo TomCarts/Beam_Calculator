@@ -1,5 +1,3 @@
-
-# Import Modules`
 import streamlit as st
 from PyNite import FEModel3D
 import pandas as pd
@@ -8,10 +6,10 @@ from PIL import Image
 import plotly.graph_objects as go
 from docx import Document
 import plotly.express as px
-import kaleido
+import io 
 from docx.shared import Inches
 
-  
+
 # Initialize session state for the DataFrame and graphs if they don't already exist
 if 'dataframe' not in st.session_state:
     # Create a sample DataFrame
@@ -20,17 +18,18 @@ if 'dataframe' not in st.session_state:
 else:
     df = st.session_state['dataframe']
 
-if 'show_FBD' not in st.session_state:
-    st.session_state['show_FBD'] = False
+if 'Free Body Diagram' not in st.session_state:
+    st.session_state['Free Body Diagram'] = False
 
-if 'show_results' not in st.session_state:
-    st.session_state['show_results'] = False
-  
-#Analysis function
+if 'Analyse & Show Results' not in st.session_state:
+    st.session_state['Analyse & Show Results'] = False
+    
+if 'Save to Excel' not in st.session_state:
+    st.session_state['Save to Excel']=False
 
-def beam_analysis(nodes_df,members_df,point_loads_df):
-
-    # Create a new finite element model
+# Analysis function
+def beam_analysis(nodes_df, members_df, point_loads_df):
+# Create a new finite element model
     beam = FEModel3D()
     
     #Add material
@@ -197,7 +196,44 @@ def create_report(report_file, moment_image_path, shear_image_path, def_figure_p
 # Save diagrams in a Word document report
 report_file = "report/Beam_Calculation_Report.docx"
 
-#Input Data on start up
+def save_to_excel(material_df, nodes_df, members_df, point_loads_df, udl_loads_df,results_df):
+    with io.BytesIO() as buffer:
+        # Create an Excel writer using xlsxwriter as the engine
+        with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+            # Write each DataFrame to a separate Excel sheet
+            material_df.to_excel(writer, sheet_name='Materials', index=False)
+            nodes_df.to_excel(writer, sheet_name='Nodes', index=False)
+            members_df.to_excel(writer, sheet_name='Members', index=False)
+            point_loads_df.to_excel(writer, sheet_name='Point_Loads', index=False)
+            udl_loads_df.to_excel(writer, sheet_name='UDL_Loads', index=False)
+            results_df.to_excel(writer,sheet_name='Results',index=False)
+        # Get the value from the buffer
+        buffer.seek(0)
+        excel_data = buffer.getvalue()
+    return excel_data
+
+
+# Function to load input data from Excel
+def load_from_excel(uploaded_file):
+    # Read the Excel file into a DataFrame
+    uploaded_df = pd.read_excel(uploaded_file, sheet_name=None)
+    
+    # Check if the required sheets exist
+    required_sheets = ["Nodes", "Materials", "Members", "Point_Loads", "UDL_Loads"]
+    missing_sheets = [sheet_name for sheet_name in required_sheets if sheet_name not in uploaded_df]
+    
+    if missing_sheets:
+        st.error(f"The uploaded Excel file is missing the following sheets: {missing_sheets}")
+        return None, None, None, None, None
+    else:
+        # Extract data from each sheet
+        nodes_df = uploaded_df["Nodes"]
+        material_df = uploaded_df["Materials"]
+        members_df = uploaded_df["Members"]
+        point_loads_df = uploaded_df["Point_Loads"]
+        udl_loads_df = uploaded_df["UDL_Loads"]
+        
+        return nodes_df, material_df, members_df, point_loads_df, udl_loads_df
 
 #Table Data for nodes
 node_1 = {'name': 'Node_A', 'x': 0,'y':0,'z':0,'R_Fx':True,'R_Fy':True,'R_Fz':True,'R_Mx':True,'R_My':False,'R_Mz':False}
@@ -268,11 +304,23 @@ with st.sidebar:
     st.write("Tom Cartigny")
     st.write("Git Hub: [@TomCarts/Beam/Calculator](https://github.com/TomCarts/Beam_Calculator.git)")
 
-#Main Page        
+# Main page content
 st.title("Beam Force Diagram Calculator")
-st.header("Inputs")
+st.header("Inputs", divider='rainbow')
 st.set_option('deprecation.showPyplotGlobalUse', False)
 
+st.write('Load inputs from excel file or use tables below to edit inputs')
+
+#Upload file
+st.subheader('File Upload')
+uploaded_file = st.file_uploader("Upload Excel file", type=["xlsx"])
+
+if uploaded_file is not None:
+    # Load data from Excel file
+    nodes_df, material_df, members_df, point_loads_df, udl_loads_df = load_from_excel(uploaded_file)
+    
+#Editable dataframes
+st.subheader('Table inputs')
 col1, col2 = st.columns(2)
 
 with col1:
@@ -298,21 +346,24 @@ with col2:
     st.write('Load Type: Fy - Vertical Point Loads, Mz - Moment about major axis')
     st.write('w1 & w2 - udl magnitude at LHS & RHS respectivly')
     st.write('x1 & x2 - udl start and finish point respective to start of member i.e. from left hand node')
-    
+
+
+st.header("Outputs", divider='rainbow')
+
+
+
 # Button to generate the first graph
-if st.button("show_FBD"):
-    st.session_state['show_FBD'] = True
-
-# Button to generate the second graph
-if st.button("show_results"):
-    st.session_state['show_results'] = True
-
-if st.session_state['show_FBD']: # Call the function to plot the free body diagram
-    #display fbd
-    plot_free_body_diagram(nodes_df, members_df, point_loads_df, udl_loads_df)
-
-if st.session_state["show_results"]:
+if st.button("Free Body Diagram"):
+    st.session_state['Free Body Diagram'] = True
     
+if st.session_state['Free Body Diagram']: 
+    plot_free_body_diagram(nodes_df, members_df, point_loads_df, udl_loads_df)
+    
+# Button to generate the second graph
+if st.button("Analyse & Show Results"):
+    st.session_state['Analyse & Show Results'] = True
+
+if st.session_state["Analyse & Show Results"]:
     # Perform calculations
     beam = beam_analysis(nodes_df, members_df, point_loads_df)
     results_df = results_table(beam, members_df, nodes_df)
@@ -341,8 +392,21 @@ if st.session_state["show_results"]:
     def_fig = px.line(results_df, x='y', y=['beam', 'dy'])
     def_figure_path = "images/deflection_figure.png"
     def_fig.write_image(def_figure_path)
-    st.plotly_chart(def_fig)
+    st.plotly_chart(def_fig, use_container_width=True)
     
-    #Download Button
-    create_report(report_file,moment_image_path,shear_image_path,def_figure_path)
-    st.download_button(label="Download Report", data=open(report_file, "rb"), file_name="Beam_Calculation_Report.docx", mime="application/octet-stream")
+    # Save to Excel button
+    if st.button("Save to Excel"):
+        st.session_state['Save to Excel'] = True
+    
+    if st.session_state["Save to Excel"]:
+        csv = save_to_excel(material_df, nodes_df, members_df, point_loads_df,udl_loads_df,results_df)
+        st.download_button(
+            label="Download Excel Data",
+            data=csv,
+            file_name='Beam_Calculator_Excel.xlsx',
+            mime='text/xlsx',
+            )
+
+    # Download button for the report
+    create_report(report_file, moment_image_path, shear_image_path, def_figure_path)
+    st.download_button(label="Download Word Report", data=open(report_file, "rb"), file_name="Beam_Calculator_Report.docx", mime="application/octet-stream")
