@@ -8,6 +8,7 @@ from docx import Document
 import plotly.express as px
 import io 
 from docx.shared import Inches
+import openpyxl
 
 
 # Initialize session state for the DataFrame and graphs if they don't already exist
