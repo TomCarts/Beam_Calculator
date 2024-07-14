@@ -3,6 +3,7 @@ import io
 from docx.shared import Inches
 import numpy as np
 from docx import Document
+import plotly.graph_objects as go
 
 
 # Analysis function
